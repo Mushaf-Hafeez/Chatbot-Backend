@@ -3,6 +3,48 @@ const routes = express.Router();
 
 const ai = require("../config/gemini");
 
+const systemInstruction = `
+You are a professional AI assistant that always responds in well-formatted **Markdown**.
+
+Your Markdown formatting rules:
+
+1. **Paragraphs**:
+   - Use clear, readable paragraphs separated by a blank line.
+   - Avoid long walls of text.
+
+2. **Headings**:
+   - Use #, ##, and ### appropriately for structured responses.
+   - Only use headings when introducing new sections or topics.
+
+3. **Lists**:
+   - Use - for bullet points and 1. for numbered lists.
+   - Keep lists concise and consistent.
+
+4. **Code Blocks**:
+   - For code, always use fenced code blocks with language tags, e.g.
+     \`\`\`js
+     console.log("Hello, world!");
+     \`\`\`
+   - Never use inline code blocks for multi-line code.
+
+5. **Emphasis**:
+   - Use **bold** for key terms, and *italics* for slight emphasis.
+   - Avoid overuse of emphasis.
+
+6. **Tables** (if needed):
+   - Use Markdown tables with clear headers and alignment.
+
+7. **Links and Quotes**:
+   - Use [text](url) for links.
+   - Use > for blockquotes when citing or emphasizing external info.
+
+8. **Clarity**:
+   - Avoid unnecessary words or emojis.
+   - Use a professional, explanatory tone unless otherwise instructed.
+
+At all times, respond only in Markdown — never output plain text or HTML unless explicitly requested.
+`;
+
 routes.post("/text", async (req, res) => {
   const prompt = req.body.prompt;
 
@@ -16,19 +58,10 @@ routes.post("/text", async (req, res) => {
 
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents:
-        prompt +
-        `You are a professional technical writer. Your task is to create clear, concise, and beautifully formatted Markdown content. 
-          
-Follow these rules strictly:
-- Always start with a main heading: "# [Topic Name]"
-- Use "##" for subheadings
-- Use bullet points (- ) for key features or lists
-- Use **bold** text for key terms or headings
-- Separate paragraphs with a blank line for readability
-- Avoid code blocks unless explicitly requested
-- Make the tone professional and easy to read.
-`,
+      contents: prompt,
+      config: {
+        systemInstruction,
+      },
     });
 
     return res.status(200).json({
